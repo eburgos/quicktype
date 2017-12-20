@@ -13,7 +13,8 @@ import {
     UnionType,
     NameOrNames,
     removeNullFromUnion,
-    PrimitiveStringTypeKind
+    PrimitiveStringTypeKind,
+    StringType
 } from "./Type";
 import { TypeGraph } from "./TypeGraph";
 import { defined, assert, panic } from "./Support";
@@ -209,7 +210,7 @@ export abstract class TypeBuilder {
         if (kind === "date-time") kind = this._stringTypeMapping.dateTime;
         let tref = this._primitiveTypes.get(kind);
         if (tref === undefined) {
-            tref = this.addType(tr => new PrimitiveType(tr, kind));
+            tref = this.addType(tr => (kind === "string" ? new StringType(tr) : new PrimitiveType(tr, kind)));
             this._primitiveTypes = this._primitiveTypes.set(kind, tref);
         }
         return tref;

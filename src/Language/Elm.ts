@@ -4,7 +4,7 @@ import { Map, List } from "immutable";
 
 import { TargetLanguage } from "../TargetLanguage";
 import { EnumOption, StringOption } from "../RendererOptions";
-import { NamedType, Type, matchType, nullableFromUnion, ClassType, UnionType, EnumType, PrimitiveType } from "../Type";
+import { NamedType, Type, matchType, nullableFromUnion, ClassType, UnionType, EnumType } from "../Type";
 import { TypeGraph } from "../TypeGraph";
 import { ConvenienceRenderer } from "../ConvenienceRenderer";
 import { Namer, Name, DependencyName, funPrefixNamer, Namespace } from "../Naming";
@@ -443,7 +443,7 @@ class ElmRenderer extends ConvenienceRenderer {
         function sortOrder(_: Name, t: Type): string {
             if (t.kind === "array") {
                 return "  array";
-            } else if (t instanceof PrimitiveType) {
+            } else if (t.isPrimitive()) {
                 return " " + t.kind;
             }
             return t.kind;
