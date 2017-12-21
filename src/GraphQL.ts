@@ -115,7 +115,7 @@ function makeScalar(builder: TypeBuilder, ft: GQLType): TypeRef {
             return builder.getPrimitiveType("double");
         default:
             // FIXME: support ID specifically?
-            return builder.getPrimitiveType("string");
+            return builder.getStringType(undefined);
     }
 }
 
@@ -436,7 +436,7 @@ export function makeGraphQLQueryTypes(
         const errorType = builder.getClassType(
             { names: OrderedSet(["error"]), alternatives: OrderedSet(["graphQLError"]) },
             false,
-            OrderedMap({ message: builder.getPrimitiveType("string") })
+            OrderedMap({ message: builder.getStringType(undefined) })
         );
         const optionalErrorArray = builder.makeNullable(
             builder.getArrayType(errorType),

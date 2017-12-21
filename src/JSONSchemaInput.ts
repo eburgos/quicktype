@@ -360,7 +360,7 @@ export function schemaToType(typeBuilder: TypeGraphBuilder, topLevelName: string
                             return panic(`String format ${schema.format} not supported`);
                     }
                 }
-                return typeBuilder.getPrimitiveType("string");
+                return typeBuilder.getStringType(undefined);
             case "null":
                 return typeBuilder.getPrimitiveType("null");
             case "integer":

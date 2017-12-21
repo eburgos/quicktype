@@ -52,13 +52,9 @@ class InferenceUnionBuilder extends UnionBuilder<NestedValueArray, NestedValueAr
         this._numValues = n;
     };
 
-    protected makeEnum(enumCases: string[]): TypeRef | null {
-        assert(enumCases.length > 0);
-        const numValues = defined(this._numValues);
-        if (numValues >= MIN_LENGTH_FOR_ENUM && enumCases.length < Math.sqrt(numValues)) {
-            return this.typeBuilder.getEnumType(this.typeName, true, OrderedSet(enumCases));
-        }
-        return null;
+    protected makeEnum(cases: string[], counts: { [name: string]: number }): TypeRef {
+        const caseMap = OrderedMap(cases.map((c: string): [string, number] => [c, counts[c]]));
+        return this.typeBuilder.getStringType(caseMap);
     }
 
     protected makeClass(classes: NestedValueArray, maps: any[]): TypeRef {

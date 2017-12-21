@@ -198,6 +198,7 @@ export abstract class TypeBuilder {
 
     // FIXME: make mutable?
     private _primitiveTypes: Map<PrimitiveTypeKind, TypeRef> = Map();
+    private _noEnumStringType: TypeRef | undefined = undefined;
     private _mapTypes: Map<TypeRef, TypeRef> = Map();
     private _arrayTypes: Map<TypeRef, TypeRef> = Map();
     private _enumTypes: Map<Set<string>, TypeRef> = Map();
@@ -205,15 +206,26 @@ export abstract class TypeBuilder {
     private _unionTypes: Map<Set<TypeRef>, TypeRef> = Map();
 
     getPrimitiveType(kind: PrimitiveTypeKind): TypeRef {
+        assert(kind !== "string", "Use getStringType to create strings");
         if (kind === "date") kind = this._stringTypeMapping.date;
         if (kind === "time") kind = this._stringTypeMapping.time;
         if (kind === "date-time") kind = this._stringTypeMapping.dateTime;
         let tref = this._primitiveTypes.get(kind);
         if (tref === undefined) {
-            tref = this.addType(tr => (kind === "string" ? new StringType(tr) : new PrimitiveType(tr, kind)));
+            tref = this.addType(tr => new PrimitiveType(tr, kind));
             this._primitiveTypes = this._primitiveTypes.set(kind, tref);
         }
         return tref;
+    }
+
+    getStringType(cases: OrderedMap<string, number> | undefined): TypeRef {
+        if (cases === undefined) {
+            if (this._noEnumStringType === undefined) {
+                this._noEnumStringType = this.addType(tr => new StringType(tr, undefined));
+            }
+            return this._noEnumStringType;
+        }
+        return this.addType(tr => new StringType(tr, cases));
     }
 
     getEnumType(names: NameOrNames, isInferred: boolean, cases: OrderedSet<string>): TypeRef {
@@ -458,7 +470,7 @@ export abstract class UnionBuilder<TArray, TClass, TMap> {
         this._enumCaseMap[s] += 1;
     };
 
-    protected abstract makeEnum(cases: string[]): TypeRef | null;
+    protected abstract makeEnum(cases: string[], counts: { [name: string]: number }): TypeRef;
     protected abstract makeClass(classes: TClass[], maps: TMap[]): TypeRef;
     protected abstract makeArray(arrays: TArray[]): TypeRef;
 
@@ -480,15 +492,12 @@ export abstract class UnionBuilder<TArray, TClass, TMap> {
             types.push(this.typeBuilder.getPrimitiveType("integer"));
         }
         this._stringTypes.forEach(kind => {
-            types.push(this.typeBuilder.getPrimitiveType(kind));
+            types.push(
+                kind === "string" ? this.typeBuilder.getStringType(undefined) : this.typeBuilder.getPrimitiveType(kind)
+            );
         });
         if (this._enumCases.length > 0) {
-            const maybeEnum = this.makeEnum(this._enumCases);
-            if (maybeEnum !== null) {
-                types.push(maybeEnum);
-            } else {
-                types.push(this.typeBuilder.getPrimitiveType("string"));
-            }
+            types.push(this.makeEnum(this._enumCases, this._enumCaseMap));
         }
         if (this._classes.length > 0 || this._maps.length > 0) {
             types.push(this.makeClass(this._classes, this._maps));
